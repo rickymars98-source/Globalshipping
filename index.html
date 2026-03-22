@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GlobalShip Pro - Advanced Logistics Management</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        * { 
+            font-family: 'Inter', sans-serif; 
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Prevent zoom on input focus for mobile */
+        input, select, textarea {
+            font-size: 16px !important;
+            touch-action: manipulation;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+        /* Animations */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes ping {
+            75%, 100% { transform: scale(2); opacity: 0; }
+        }
+        
+        .animate-slide-in { animation: slideIn 0.6s ease-out forwards; }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .map-dot {
+            position: relative;
+        }
+        .map-dot::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: inherit;
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+            top: 0;
+            left: 0;
+        }
+
+        .chat-bubble {
+            position: relative;
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            animation: slideIn 0.3s ease-out;
+            word-wrap: break-word;
+        }
+        .chat-bubble.sent {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+            color: white;
+        }
+        .chat-bubble.received {
+            background: #334155;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+            color: white;
+        }
+
+        /* Mobile menu styles */
+        .mobile-menu-open {
+            display: block !important;
+        }
+        
+        /* Touch-friendly buttons */
+        .touch-btn {
+            min-height: 44px;
+            min-width: 44px;
+        }
+        
+        /* Ensure inputs are tappable */
+        input, textarea, select, button {
+            touch-action: manipulation;
+            -webkit-appearance: none;
+        }
+        
+        /* Fallback styles */
+        body {
+            background-color: #020617;
+            color: #f8fafc;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .hidden { display: none !important; }
+        
+        /* Fix for iOS input zoom */
+        @supports (-webkit-touch-callout: none) {
+            input, textarea, select {
+                font-size: 16px !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 overflow-x-hidden">
+
+    <!-- Navigation -->
+    <nav style="position: fixed; width: 100%; z-index: 50; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.1); top: 0;">
+        <div style="max-width: 80rem; margin: 0 auto; padding: 0 1rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; height: 4rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;" onclick="showSection('home')">
+                    <div style="width: 2.5rem; height: 2.5rem; background: linear-gradient(135deg, #3b82f6, #9333ea); border-radius: 0.75rem; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-shipping-fast" style="color: white; font-size: 1.125rem;"></i>
+                    </div>
+                    <span style="font-size: 1.25rem; font-weight: 700;">Global<span class="gradient-text">Ship</span> Pro</span>
+                </div>
+                
+                <!-- Desktop Menu -->
+                <div style="display: none; align-items: center; gap: 2rem;" class="desktop-only">
+                    <button onclick="showSection('track')" style="color: #cbd5e1; background: none; font-size: 0.875rem; font-weight: 500; padding: 0.5rem;">Track</button>
+                    <button onclick="showSection('services')" style="color: #cbd5e1; background: none; font-size: 0.875rem; font-weight: 500; padding: 0.5rem;">Services</button>
+                    <button onclick="showSection('contact')" style="color: #cbd5e1; background: none; font-size: 0.875rem; font-weight: 500; padding: 0.5rem;">Contact</button>
+                    <button onclick="showSection('admin')" style="padding: 0.5rem 1.25rem; background: #2563eb; color: white; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; border: none;">
+                        <i class="fas fa-lock"></i> Admin
+                    </button>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="touch-btn" style="display: flex; color: #cbd5e1; background: none; font-size: 1.5rem; padding: 0.5rem; border: none; align-items: center; justify-content: center;" onclick="toggleMobileMenu(event)">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobileMenu" style="display: none; background: rgba(15, 23, 42, 0.98); border-top: 1px solid rgba(255,255,255,0.1); position: absolute; width: 100%; left: 0;">
+            <div style="padding: 1rem;">
+                <button onclick="showSection('track'); toggleMobileMenu()" style="display: block; width: 100%; text-align: left; padding: 1rem; color: #cbd5e1; background: none; border: none; font-size: 1rem; border-bottom: 1px solid #1e293b;">Track Shipment</button>
+                <button onclick="showSection('services'); toggleMobileMenu()" style="display: block; width: 100%; text-align: left; padding: 1rem; color: #cbd5e1; background: none; border: none; font-size: 1rem; border-bottom: 1px solid #1e293b;">Services</button>
+                <button onclick="showSection('contact'); toggleMobileMenu()" style="display: block; width: 100%; text-align: left; padding: 1rem; color: #cbd5e1; background: none; border: none; font-size: 1rem; border-bottom: 1px solid #1e293b;">Contact Us</button>
+                <button onclick="showSection('admin'); toggleMobileMenu()" style="display: block; width: 100%; text-align: left; padding: 1rem; color: #60a5fa; background: none; border: none; font-size: 1rem; font-weight: 600;">Admin Portal</button>
+            </div>
+        </div>
+    </nav>
+
+    <style>
+        @media (min-width: 768px) {
+            .desktop-only { display: flex !important; }
+            #mobileMenuBtn { display: none !important; }
+        }
+    </style>
+
+    <!-- Spacer for fixed nav -->
+    <div style="height: 4rem;"></div>
+
+    <!-- HOME SECTION -->
+    <section id="home" class="section-view" style="min-height: calc(100vh - 4rem); padding: 2rem 1rem; background: linear-gradient(180deg, #020617 0%, #0f172a 50%, #020617 100%);">
+        <div style="max-width: 80rem; margin: 0 auto; text-align: center;">
+            
+            <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 9999px; margin-bottom: 2rem;">
+                <span style="width: 0.5rem; height: 0.5rem; background: #22c55e; border-radius: 50%; animation: pulse 2s infinite;"></span>
+                <span style="font-size: 0.875rem; color: #cbd5e1;">Live Tracking Available 24/7</span>
+            </div>
+
+            <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; line-height: 1.2;">
+                Global Logistics <br>
+                <span class="gradient-text">Reimagined</span>
+            </h1>
+
+            <p style="font-size: 1.125rem; color: #94a3b8; max-width: 36rem; margin: 0 auto 2rem;">
+                Track your shipments in real-time across 190+ countries with instant updates.
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 1rem; align-items: center; margin-bottom: 3rem;">
+                <button onclick="showSection('track')" class="touch-btn" style="padding: 1rem 2rem; background: linear-gradient(135deg, #2563eb, #9333ea); color: white; border-radius: 0.75rem; font-weight: 600; font-size: 1rem; border: none; width: 100%; max-width: 20rem;">
+                    <i class="fas fa-search-location" style="margin-right: 0.5rem;"></i> Track Your Shipment
+                </button>
+                <button onclick="showSection('contact')" class="touch-btn" style="padding: 1rem 2rem; background: #1e293b; color: white; border-radius: 0.75rem; font-weight: 600; border: 1px solid #334155; width: 100%; max-width: 20rem;">
+                    <i class="fas fa-headset" style="margin-right: 0.5rem;"></i> Talk to Support
+                </button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; max-width: 48rem; margin: 0 auto;">
+                <div class="glass-panel" style="padding: 1.5rem; border-radius: 1rem;">
+                    <div style="font-size: 1.5rem; font-weight: 700; color: #60a5fa;">190+</div>
+                    <div style="font-size: 0.875rem; color: #94a3b8;">Countries</div>
+                </div>
+                <div class="glass-panel" style="padding: 1.5rem; border-radius: 1rem;">
+                    <div style="font-size: 1.5rem; font-weight: 700; color: #c084fc;">2M+</div>
+                    <div style="font-size: 0.875rem; color: #94a3b8;">Shipments</div>
+                </div>
+                <div class="glass-panel" style="padding: 1.5rem; border-radius: 1rem;">
+                    <div style="font-size: 1.5rem; font-weight: 700; color: #34d399;">99.8%</div>
+                    <div style="font-size: 0.875rem; color: #94a3b8;">On-Time</div>
+                </div>
+                <div class="glass-panel" style="padding: 1.5rem; border-radius: 1rem;">
+                    <div style="font-size: 1.5rem; font-weight: 700; color: #fbbf24;">24/7</div>
+                    <div style="font-size: 0.875rem; color: #94a3b8;">Support</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TRACKING SECTION -->
+    <section id="track" class="section-view hidden" style="min-height: calc(100vh - 4rem); padding: 2rem 1rem;">
+        <div style="max-width: 48rem; margin: 0 auto;">
+            <h2 style="font-size: 1.875rem; font-weight: 700; text-align: center; margin-bottom: 0.5rem;">Track Your Shipment</h2>
+            <p style="color: #94a3b8; text-align: center; margin-bottom: 2rem;">Enter your tracking code</p>
+
+            <div class="glass-panel" style="border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem;">
+                <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem;">
+                    <input type="text" id="trackingInput" placeholder="GSP-2026-001" 
+                        style="flex: 1; font-family: monospace; text-transform: uppercase; font-size: 16px; padding: 0.875rem; border-radius: 0.5rem; border: 1px solid #334155; background: #0f172a; color: white;">
+                    <button onclick="trackShipment()" class="touch-btn" style="padding: 0 1.5rem; background: #2563eb; color: white; border-radius: 0.5rem; font-weight: 600; border: none; white-space: nowrap;">
+                        <i class="fas fa-search"></i> Track
+                    </button>
+                </div>
+
+                <!-- Results -->
+                <div id="trackingResult" class="hidden">
+                    <div style="border-bottom: 1px solid #334155; padding-bottom: 1rem; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                            <div>
+                                <div style="font-size: 0.75rem; color: #94a3b8;">Tracking Code</div>
+                                <div style="font-size: 1.25rem; font-weight: 700; font-family: monospace; color: #60a5fa;" id="displayTrackingCode">--</div>
+                            </div>
+                            <span id="shipmentStatus" style="padding: 0.375rem 0.75rem; background: rgba(96, 165, 250, 0.2); color: #60a5fa; border: 1px solid #60a5fa; border-radius: 9999px; font-size: 0.875rem; font-weight: 600;">--</span>
+                        </div>
+                    </div>
+
+                    <div style="position: relative; height: 12rem; background: rgba(15, 23, 42, 0.5); border-radius: 0.75rem; margin-bottom: 1.5rem; border: 1px solid #334155; overflow: hidden;">
+                        <div style="position: absolute; top: 50%; left: 20%; transform: translate(-50%, -50%); text-align: center;">
+                            <div style="width: 0.75rem; height: 0.75rem; background: #3b82f6; border-radius: 50%; margin: 0 auto 0.25rem;" class="map-dot"></div>
+                            <div style="font-size: 0.625rem; font-weight: 600;" id="originLocation">--</div>
+                        </div>
+                        <div style="position: absolute; top: 50%; right: 20%; transform: translate(50%, -50%); text-align: center;">
+                            <div style="width: 0.75rem; height: 0.75rem; background: #9333ea; border-radius: 50%; margin: 0 auto 0.25rem;" class="map-dot"></div>
+                            <div style="font-size: 0.625rem; font-weight: 600;" id="destLocation">--</div>
+                        </div>
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);" id="currentPosMarker">
+                            <div style="width: 1.25rem; height: 1.25rem; background: #f59e0b; border-radius: 50%; border: 3px solid #020617; display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite;">
+                                <i class="fas fa-plane" style="font-size: 0.5rem; color: #020617;"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="trackingTimeline"></div>
+                </div>
+
+                <div id="noResult" class="hidden" style="text-align: center; padding: 2rem;">
+                    <i class="fas fa-box-open" style="font-size: 3rem; color: #475569; margin-bottom: 1rem;"></i>
+                    <p style="color: #94a3b8;">No shipment found. Check your tracking code.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICES SECTION -->
+    <section id="services" class="section-view hidden" style="min-height: calc(100vh - 4rem); padding: 2rem 1rem;">
+        <div style="max-width: 80rem; margin: 0 auto;">
+            <h2 style="font-size: 1.875rem; font-weight: 700; text-align: center; margin-bottom: 2rem;">Our Services</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+                <div class="glass-panel" style="padding: 1.5rem; border-radius: 1rem;">
+                    <div style="width: 3rem; height: 3rem; background: rgba(59, 130, 246, 0.2); border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                        <i class="fas fa-plane" style="font-size: 1.25rem; color: #60a5fa;"></i>
+                    </div>
+                    <h3 style="font-weight: 700; margin-bottom: 0.5rem;">Air Freight</h3>
+                    <p style="font-size: 0.875rem; color: #94a3b8;">Express delivery 24-72 hours worldwide</p>
+                </div>
+                
+                <div class="glass-panel" style="padding: 1.5rem; border-radius: 1rem;">
+                    <div style="width: 3rem; height: 3rem; background: rgba(147, 51, 234, 0.2); border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                        <i class="fas fa-ship" style="font-size: 1.25rem; color: #c084fc;"></i>
+                    </div>
+                    <h3 style="font-weight: 700; margin-bottom: 0.5rem;">Ocean Freight</h3>
+                    <p style="font-size: 0.875rem; color: #94a3b8;">Cost-effective bulk shipping solutions</p>
+                </div>
+                
+                <div class="glass-panel" style="padding: 1.5rem; border-radius: 1rem;">
+                    <div style="width: 3rem; height: 3rem; background: rgba(16, 185, 129, 0.2); border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                        <i class="fas fa-truck" style="font-size: 1.25rem; color: #34d399;"></i>
+                    </div>
+                    <h3 style="font-weight: 700; margin-bottom: 0.5rem;">Ground Transport</h3>
+                    <p style="font-size: 0.875rem; color: #94a3b8;">Nationwide trucking with GPS tracking</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT SECTION -->
+    <section id="contact" class="section-view hidden" style="min-height: calc(100vh - 4rem); padding: 2rem 1rem;">
+        <div style="max-width: 48rem; margin: 0 auto;">
+            <h2 style="font-size: 1.875rem; font-weight: 700; text-align: center; margin-bottom: 2rem;">Get in Touch</h2>
+            
+            <div class="glass-panel" style="padding: 1.5rem; border-radius: 1rem; margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                    <div style="position: relative;">
+                        <div style="width: 0.75rem; height: 0.75rem; background: #22c55e; border-radius: 50%;"></div>
+                        <div style="position: absolute; inset: 0; width: 0.75rem; height: 0.75rem; background: #22c55e; border-radius: 50%; animation: ping 1s infinite;"></div>
+                    </div>
+                    <span style="font-weight: 600;">Live Chat Available</span>
+                </div>
+                <button onclick="openChat()" class="touch-btn" style="width: 100%; padding: 1rem; background: #2563eb; color: white; border-radius: 0.75rem; font-weight: 600; border: none;">
+                    <i class="fas fa-comments" style="margin-right: 0.5rem;"></i> Start Live Chat
+                </button>
+            </div>
+
+            <div class="glass-panel" style="padding: 1.5rem; border-radius: 1rem;">
+                <h3 style="font-weight: 700; margin-bottom: 1rem;">Send Message</h3>
+                <form onsubmit="handleContactSubmit(event)">
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Name</label>
+                        <input type="text" required style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Email</label>
+                        <input type="email" required style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Message</label>
+                        <textarea rows="4" required style="width: 100%; font-size: 16px; padding: 0.75rem; resize: none;"></textarea>
+                    </div>
+                    <button type="submit" class="touch-btn" style="width: 100%; padding: 1rem; background: linear-gradient(135deg, #2563eb, #9333ea); color: white; border-radius: 0.75rem; font-weight: 600; border: none;">
+                        Send Message
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- ADMIN SECTION -->
+    <section id="admin" class="section-view hidden">
+        
+        <!-- Login -->
+        <div id="adminLogin" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; background: #020617;">
+            <div class="glass-panel" style="padding: 2rem; border-radius: 1rem; width: 100%; max-width: 24rem;">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div style="width: 4rem; height: 4rem; background: linear-gradient(135deg, #3b82f6, #9333ea); border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <i class="fas fa-lock" style="color: white; font-size: 1.5rem;"></i>
+                    </div>
+                    <h2 style="font-size: 1.5rem; font-weight: 700;">Admin Portal</h2>
+                    <p style="color: #94a3b8; font-size: 0.875rem;">Authorized personnel only</p>
+                </div>
+                
+                <form onsubmit="handleAdminLogin(event)">
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Admin ID</label>
+                        <input type="text" id="adminId" value="admin" style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Password</label>
+                        <input type="password" id="adminPass" value="admin123" style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                    </div>
+                    <button type="submit" class="touch-btn" style="width: 100%; padding: 1rem; background: #2563eb; color: white; border-radius: 0.75rem; font-weight: 600; border: none;">
+                        Access Dashboard
+                    </button>
+                </form>
+                
+                <div style="margin-top: 1rem; padding: 1rem; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.2); border-radius: 0.5rem;">
+                    <p style="font-size: 0.75rem; color: #fbbf24; text-align: center;">
+                        <i class="fas fa-info-circle"></i> Demo: admin / admin123
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="adminDashboard" class="hidden" style="display: flex; min-height: 100vh; background: #020617;">
+            
+            <!-- Sidebar -->
+            <aside style="width: 16rem; background: #0f172a; border-right: 1px solid #1e293b; position: fixed; height: 100vh; overflow-y: auto; display: none;" class="sidebar-desktop">
+                <div style="padding: 1.5rem; border-bottom: 1px solid #1e293b;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 2.5rem; height: 2.5rem; background: linear-gradient(135deg, #3b82f6, #9333ea); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-shipping-fast" style="color: white;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; font-size: 0.875rem;">GlobalShip Pro</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">Admin Panel</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <nav style="padding: 1rem;">
+                    <button onclick="showAdminTab('shipments')" class="admin-nav active" style="width: 100%; text-align: left; padding: 0.75rem 1rem; background: rgba(37, 99, 235, 0.2); color: #60a5fa; border: 1px solid rgba(37, 99, 235, 0.3); border-radius: 0.5rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem;">
+                        <i class="fas fa-box"></i> Shipments
+                    </button>
+                    <button onclick="showAdminTab('create')" class="admin-nav" style="width: 100%; text-align: left; padding: 0.75rem 1rem; color: #94a3b8; background: none; border: none; border-radius: 0.5rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem;">
+                        <i class="fas fa-plus-circle"></i> Create New
+                    </button>
+                    <button onclick="showAdminTab('chats')" class="admin-nav" style="width: 100%; text-align: left; padding: 0.75rem 1rem; color: #94a3b8; background: none; border: none; border-radius: 0.5rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem; position: relative;">
+                        <i class="fas fa-comments"></i> Live Chats
+                        <span id="unreadBadge" class="hidden" style="position: absolute; right: 1rem; background: #ef4444; color: white; border-radius: 50%; width: 1.25rem; height: 1.25rem; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">0</span>
+                    </button>
+                    <button onclick="showAdminTab('settings')" class="admin-nav" style="width: 100%; text-align: left; padding: 0.75rem 1rem; color: #94a3b8; background: none; border: none; border-radius: 0.5rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem;">
+                        <i class="fas fa-cog"></i> Settings
+                    </button>
+                </nav>
+                
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 1rem; border-top: 1px solid #1e293b;">
+                    <button onclick="adminLogout()" style="width: 100%; padding: 0.75rem; color: #f87171; background: none; border: none; display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Mobile Admin Nav -->
+            <div class="admin-mobile-nav" style="position: fixed; bottom: 0; left: 0; right: 0; background: #0f172a; border-top: 1px solid #1e293b; display: flex; justify-content: space-around; padding: 0.5rem; z-index: 50;">
+                <button onclick="showAdminTab('shipments')" style="padding: 0.5rem; color: #60a5fa; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; font-size: 0.625rem;">
+                    <i class="fas fa-box" style="font-size: 1.25rem;"></i> Shipments
+                </button>
+                <button onclick="showAdminTab('create')" style="padding: 0.5rem; color: #94a3b8; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; font-size: 0.625rem;">
+                    <i class="fas fa-plus-circle" style="font-size: 1.25rem;"></i> Create
+                </button>
+                <button onclick="showAdminTab('chats')" style="padding: 0.5rem; color: #94a3b8; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; font-size: 0.625rem; position: relative;">
+                    <i class="fas fa-comments" style="font-size: 1.25rem;"></i> Chats
+                    <span id="mobileUnreadBadge" class="hidden" style="position: absolute; top: 0; right: 0.5rem; background: #ef4444; color: white; border-radius: 50%; width: 1rem; height: 1rem; display: flex; align-items: center; justify-content: center; font-size: 0.625rem;">0</span>
+                </button>
+                <button onclick="showAdminTab('settings')" style="padding: 0.5rem; color: #94a3b8; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; font-size: 0.625rem;">
+                    <i class="fas fa-cog" style="font-size: 1.25rem;"></i> Settings
+                </button>
+            </div>
+
+            <!-- Main Content -->
+            <main style="flex: 1; padding: 1rem; padding-bottom: 5rem; width: 100%;" class="main-content">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <div>
+                        <h1 style="font-size: 1.25rem; font-weight: 700;">Dashboard</h1>
+                        <p style="color: #94a3b8; font-size: 0.875rem;" id="currentDate">--</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 2.5rem; height: 2.5rem; background: linear-gradient(135deg, #10b981, #0d9488); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
+                            A
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                    <div class="glass-panel" style="padding: 1rem; border-radius: 0.75rem;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #60a5fa;" id="totalShipments">0</div>
+                        <div style="font-size: 0.75rem; color: #94a3b8;">Active Shipments</div>
+                    </div>
+                    <div class="glass-panel" style="padding: 1rem; border-radius: 0.75rem;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #fbbf24;" id="activeChatsCount">0</div>
+                        <div style="font-size: 0.75rem; color: #94a3b8;">Active Chats</div>
+                    </div>
+                </div>
+
+                <!-- TAB: Shipments -->
+                <div id="tab-shipments" class="admin-tab">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="font-weight: 700;">All Shipments</h3>
+                        <button onclick="showAdminTab('create')" class="touch-btn" style="padding: 0.5rem 1rem; background: #2563eb; color: white; border-radius: 0.5rem; font-size: 0.875rem; border: none;">
+                            <i class="fas fa-plus"></i> New
+                        </button>
+                    </div>
+                    <div id="shipmentsList" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <!-- Dynamic -->
+                    </div>
+                </div>
+
+                <!-- TAB: Create -->
+                <div id="tab-create" class="admin-tab hidden">
+                    <h3 style="font-weight: 700; margin-bottom: 1rem;">Create New Shipment</h3>
+                    <div class="glass-panel" style="padding: 1.5rem; border-radius: 1rem;">
+                        <form onsubmit="createShipment(event)">
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Customer Name *</label>
+                                <input type="text" id="newCustomerName" required style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Customer Email *</label>
+                                <input type="email" id="newCustomerEmail" required style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                                <div>
+                                    <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">From</label>
+                                    <select id="newOrigin" style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                                        <option>New York, USA</option>
+                                        <option>London, UK</option>
+                                        <option>Tokyo, Japan</option>
+                                        <option>Singapore</option>
+                                        <option>Dubai, UAE</option>
+                                        <option>Los Angeles, USA</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">To</label>
+                                    <select id="newDestination" style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                                        <option>London, UK</option>
+                                        <option>New York, USA</option>
+                                        <option>Tokyo, Japan</option>
+                                        <option>Singapore</option>
+                                        <option>Dubai, UAE</option>
+                                        <option>Los Angeles, USA</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 1.5rem;">
+                                <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Service</label>
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
+                                    <label style="cursor: pointer;">
+                                        <input type="radio" name="serviceType" value="air" checked style="display: none;">
+                                        <div style="padding: 0.75rem; border: 1px solid #334155; background: #0f172a; border-radius: 0.5rem; text-align: center;">
+                                            <i class="fas fa-plane" style="color: #60a5fa;"></i>
+                                            <div style="font-size: 0.75rem; margin-top: 0.25rem;">Air</div>
+                                        </div>
+                                    </label>
+                                    <label style="cursor: pointer;">
+                                        <input type="radio" name="serviceType" value="ocean" style="display: none;">
+                                        <div style="padding: 0.75rem; border: 1px solid #334155; background: #0f172a; border-radius: 0.5rem; text-align: center;">
+                                            <i class="fas fa-ship" style="color: #c084fc;"></i>
+                                            <div style="font-size: 0.75rem; margin-top: 0.25rem;">Ocean</div>
+                                        </div>
+                                    </label>
+                                    <label style="cursor: pointer;">
+                                        <input type="radio" name="serviceType" value="ground" style="display: none;">
+                                        <div style="padding: 0.75rem; border: 1px solid #334155; background: #0f172a; border-radius: 0.5rem; text-align: center;">
+                                            <i class="fas fa-truck" style="color: #34d399;"></i>
+                                            <div style="font-size: 0.75rem; margin-top: 0.25rem;">Ground</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <button type="submit" class="touch-btn" style="width: 100%; padding: 1rem; background: linear-gradient(135deg, #2563eb, #9333ea); color: white; border-radius: 0.75rem; font-weight: 600; border: none;">
+                                <i class="fas fa-plus-circle"></i> Create Shipment
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- TAB: Chats -->
+                <div id="tab-chats" class="admin-tab hidden">
+                    <h3 style="font-weight: 700; margin-bottom: 1rem;">Customer Messages</h3>
+                    <div id="adminChatList" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <!-- Dynamic -->
+                    </div>
+                    <div id="adminChatView" class="hidden" style="margin-top: 1rem;">
+                        <div class="glass-panel" style="border-radius: 1rem; overflow: hidden;">
+                            <div style="padding: 1rem; border-bottom: 1px solid #334155; background: rgba(15, 23, 42, 0.5);">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-weight: 600;" id="chatCustomerName">--</div>
+                                        <div style="font-size: 0.75rem; color: #64748b;" id="chatTrackingCode">--</div>
+                                    </div>
+                                    <button onclick="closeAdminChat()" style="background: none; color: #94a3b8; border: none;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="adminChatMessages" style="height: 300px; overflow-y: auto; padding: 1rem;"></div>
+                            <div style="padding: 1rem; border-top: 1px solid #334155;">
+                                <form onsubmit="sendAdminReply(event)" style="display: flex; gap: 0.5rem;">
+                                    <input type="text" id="adminReplyInput" placeholder="Type reply..." style="flex: 1; font-size: 16px; padding: 0.75rem;">
+                                    <button type="submit" class="touch-btn" style="padding: 0 1rem; background: #2563eb; color: white; border-radius: 0.5rem; border: none;">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: Settings -->
+                <div id="tab-settings" class="admin-tab hidden">
+                    <h3 style="font-weight: 700; margin-bottom: 1rem;">Admin Settings</h3>
+                    <div class="glass-panel" style="padding: 1.5rem; border-radius: 1rem; margin-bottom: 1rem;">
+                        <h4 style="font-weight: 600; margin-bottom: 1rem; color: #60a5fa;">Change Password</h4>
+                        <form onsubmit="changePassword(event)">
+                            <div style="margin-bottom: 1rem;">
+                                <input type="password" id="currentPassword" placeholder="Current password" required style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <input type="password" id="newPassword" placeholder="New password (min 6 chars)" required minlength="6" style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <input type="password" id="confirmPassword" placeholder="Confirm new password" required style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                            </div>
+                            <button type="submit" class="touch-btn" style="width: 100%; padding: 0.875rem; background: #2563eb; color: white; border-radius: 0.5rem; font-weight: 600; border: none;">
+                                Update Password
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="glass-panel" style="padding: 1.5rem; border-radius: 1rem;">
+                        <h4 style="font-weight: 600; margin-bottom: 1rem;">Quick Guide</h4>
+                        <div style="font-size: 0.875rem; color: #94a3b8; line-height: 1.6;">
+                            <p style="margin-bottom: 0.5rem;"><strong style="color: #cbd5e1;">Create Shipment:</strong> Go to "Create" tab, fill form, tracking code auto-generates</p>
+                            <p style="margin-bottom: 0.5rem;"><strong style="color: #cbd5e1;">Update Location:</strong> Tap any shipment in "Shipments" tab, select new location</p>
+                            <p><strong style="color: #cbd5e1;">Reply to Customers:</strong> "Chats" tab shows messages, tap to reply</p>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </section>
+
+    <!-- Customer Chat Widget -->
+    <div id="customerChatWidget" class="hidden" style="position: fixed; bottom: 0; left: 0; right: 0; top: 0; background: rgba(2, 6, 23, 0.98); z-index: 100; display: flex; flex-direction: column;">
+        <div style="background: linear-gradient(135deg, #2563eb, #9333ea); padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="position: relative;">
+                    <div style="width: 2.5rem; height: 2.5rem; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-headset" style="color: white;"></i>
+                    </div>
+                    <div style="position: absolute; bottom: 0; right: 0; width: 0.75rem; height: 0.75rem; background: #22c55e; border-radius: 50%; border: 2px solid #2563eb;"></div>
+                </div>
+                <div>
+                    <div style="font-weight: 600; color: white;">Live Support</div>
+                    <div style="font-size: 0.75rem; color: #bfdbfe;">Online</div>
+                </div>
+            </div>
+            <button onclick="closeChat()" style="background: none; color: white; border: none; font-size: 1.25rem; padding: 0.5rem;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div id="customerChatMessages" style="flex: 1; overflow-y: auto; padding: 1rem;">
+            <div class="chat-bubble received">
+                <p style="font-size: 0.875rem;">Hello! Welcome to GlobalShip Pro. How can I help you today?</p>
+                <span style="font-size: 0.75rem; color: #94a3b8; display: block; margin-top: 0.25rem;">Support • Just now</span>
+            </div>
+        </div>
+        
+        <div style="padding: 1rem; background: #0f172a; border-top: 1px solid #334155;">
+            <form onsubmit="sendCustomerMessage(event)" style="display: flex; gap: 0.5rem;">
+                <input type="text" id="customerMessageInput" placeholder="Type your message..." 
+                    style="flex: 1; font-size: 16px; padding: 0.875rem; border-radius: 1.5rem; border: 1px solid #334155; background: #1e293b; color: white;">
+                <button type="submit" class="touch-btn" style="width: 3rem; height: 3rem; background: #2563eb; color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Chat Toggle Button -->
+    <button id="chatToggleBtn" onclick="openChat()" class="touch-btn" style="position: fixed; bottom: 1.5rem; right: 1.5rem; width: 3.5rem; height: 3.5rem; background: linear-gradient(135deg, #2563eb, #9333ea); color: white; border-radius: 50%; border: none; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4); display: flex; align-items: center; justify-content: center; z-index: 40;">
+        <i class="fas fa-comments" style="font-size: 1.25rem;"></i>
+    </button>
+
+    <!-- Edit Shipment Modal -->
+    <div id="editModal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 1rem;">
+        <div class="glass-panel" style="width: 100%; max-width: 24rem; padding: 1.5rem; border-radius: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="font-weight: 700;">Update Shipment</h3>
+                <button onclick="closeEditModal()" style="background: none; color: #94a3b8; border: none; font-size: 1.25rem;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form onsubmit="saveShipmentEdit(event)">
+                <input type="hidden" id="editTrackingCode">
+                
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Current Location</label>
+                    <select id="editLocation" style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                        <option>New York, USA (JFK)</option>
+                        <option>London, UK (Heathrow)</option>
+                        <option>Paris, France (CDG)</option>
+                        <option>Frankfurt, Germany</option>
+                        <option>Amsterdam, Netherlands</option>
+                        <option>Dubai, UAE</option>
+                        <option>Singapore Changi</option>
+                        <option>Tokyo, Japan (Narita)</option>
+                        <option>Los Angeles, USA (LAX)</option>
+                        <option>In Transit - Atlantic</option>
+                        <option>In Transit - Pacific</option>
+                        <option>Customs Clearance</option>
+                        <option>Out for Delivery</option>
+                        <option>Delivered</option>
+                    </select>
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Status</label>
+                    <select id="editStatus" style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                        <option value="transit">In Transit</option>
+                        <option value="customs">Customs Clearance</option>
+                        <option value="out">Out for Delivery</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="exception">Exception</option>
+                    </select>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Notes</label>
+                    <textarea id="editNotes" rows="2" placeholder="Update details..." style="width: 100%; font-size: 16px; padding: 0.75rem; resize: none;"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 0.75rem;">
+                    <button type="button" onclick="closeEditModal()" style="flex: 1; padding: 0.875rem; border: 1px solid #334155; background: transparent; color: white; border-radius: 0.5rem;">Cancel</button>
+                    <button type="submit" class="touch-btn" style="flex: 1; padding: 0.875rem; background: #2563eb; color: white; border-radius: 0.5rem; font-weight: 600; border: none;">
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" style="position: fixed; bottom: 6rem; left: 50%; transform: translateX(-50%) translateY(100px); padding: 1rem 1.5rem; background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; display: flex; align-items: center; gap: 0.75rem; opacity: 0; transition: all 0.3s; z-index: 200; pointer-events: none; max-width: 90%;">
+        <i id="toastIcon" class="fas fa-check-circle" style="color: #34d399;"></i>
+        <span id="toastMessage" style="font-weight: 500; font-size: 0.875rem;">Success</span>
+    </div>
+
+    <style>
+        @media (min-width: 768px) {
+            .sidebar-desktop { display: block !important; }
+            .admin-mobile-nav { display: none !important; }
+            .main-content { margin-left: 16rem !important; padding-bottom: 1rem !important; }
+        }
+    </style>
+
+    <script>
+        // Data Store
+        const store = {
+            shipments: [
+                {
+                    code: 'GSP-2026-001',
+                    customer: 'John Smith',
+                    email: 'john@example.com',
+                    origin: 'New York, USA',
+                    destination: 'London, UK',
+                    status: 'transit',
+                    service: 'air',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    timeline: [
+                        { time: new Date(Date.now() - 86400000).toISOString(), location: 'New York, USA (JFK)', status: 'Package received at facility' },
+                        { time: new Date(Date.now() - 43200000).toISOString(), location: 'New York, USA (JFK)', status: 'Departed from origin' },
+                        { time: new Date().toISOString(), location: 'In Transit - Atlantic', status: 'In flight to destination' }
+                    ]
+                },
+                {
+                    code: 'GSP-2026-002',
+                    customer: 'Sarah Johnson',
+                    email: 'sarah@example.com',
+                    origin: 'Tokyo, Japan',
+                    destination: 'Los Angeles, USA',
+                    status: 'customs',
+                    service: 'air',
+                    createdAt: new Date(Date.now() - 172800000).toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    timeline: [
+                        { time: new Date(Date.now() - 172800000).toISOString(), location: 'Tokyo, Japan (Narita)', status: 'Package received' },
+                        { time: new Date(Date.now() - 86400000).toISOString(), location: 'Tokyo, Japan (Narita)', status: 'Departed from Tokyo' },
+                        { time: new Date().toISOString(), location: 'Los Angeles, USA (LAX)', status: 'Arrived - Customs pending' }
+                    ]
+                }
+            ],
+            chats: [
+                {
+                    id: 'chat-1',
+                    customer: 'John Smith',
+                    email: 'john@example.com',
+                    trackingCode: 'GSP-2026-001',
+                    unread: 1,
+                    messages: [
+                        { sender: 'customer', text: 'When will my package arrive in London?', time: new Date(Date.now() - 1800000).toISOString() }
+                    ]
+                },
+                {
+                    id: 'chat-2',
+                    customer: 'Sarah Johnson',
+                    email: 'sarah@example.com',
+                    trackingCode: 'GSP-2026-002',
+                    unread: 0,
+                    messages: [
+                        { sender: 'customer', text: 'Is my package stuck in customs?', time: new Date(Date.now() - 7200000).toISOString() },
+                        { sender: 'admin', text: 'Checking now, one moment please.', time: new Date(Date.now() - 7100000).toISOString() }
+                    ]
+                }
+            ],
+            currentUser: null,
+            activeChat: null,
+            currentEditCode: null,
+            credentials: {
+                adminId: 'admin',
+                password: 'admin123'
+            }
+        };
+
+        // Utilities
+        function generateTrackingCode() {
+            const year = new Date().getFullYear();
+            const random = Math.floor(1000 + Math.random() * 9000);
+            return `GSP-${year}-${random}`;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            
+            toastMessage.textContent = message;
+            toastIcon.className = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+            toastIcon.style.color = type === 'success' ? '#34d399' : '#fbbf24';
+            
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(100px)';
+            }, 3000);
+        }
+
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section-view').forEach(section => {
+                section.classList.add('hidden');
+            });
+            const target = document.getElementById(sectionId);
+            if (target) {
+                target.classList.remove('hidden');
+                window.scrollTo(0, 0);
+            }
+            // Close mobile menu if open
+            document.getElementById('mobileMenu').style.display = 'none';
+        }
+
+        function toggleMobileMenu(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('mobileMenu');
+            const currentDisplay = window.getComputedStyle(menu).display;
+            menu.style.display = currentDisplay === 'none' ? 'block' : 'none';
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('mobileMenu');
+            const btn = document.getElementById('mobileMenuBtn');
+            if (!menu.contains(e.target) && !btn.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
+
+        // Tracking
+        function trackShipment() {
+            const code = document.getElementById('trackingInput').value.trim().toUpperCase();
+            const resultDiv = document.getElementById('trackingResult');
+            const noResultDiv = document.getElementById('noResult');
+            
+            const shipment = store.shipments.find(s => s.code.toUpperCase() === code);
+            
+            if (shipment) {
+                resultDiv.classList.remove('hidden');
+                noResultDiv.classList.add('hidden');
+                displayShipmentDetails(shipment);
+            } else {
+                resultDiv.classList.add('hidden');
+                noResultDiv.classList.remove('hidden');
+            }
+        }
+
+        function displayShipmentDetails(shipment) {
+            document.getElementById('displayTrackingCode').textContent = shipment.code;
+            document.getElementById('originLocation').textContent = shipment.origin;
+            document.getElementById('destLocation').textContent = shipment.destination;
+            
+            const statusBadge = document.getElementById('shipmentStatus');
+            const statusColors = {
+                'transit': { text: 'In Transit', color: '#60a5fa', bg: 'rgba(96, 165, 250, 0.2)' },
+                'customs': { text: 'Customs', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.2)' },
+                'out': { text: 'Out for Delivery', color: '#c084fc', bg: 'rgba(192, 132, 252, 0.2)' },
+                'delivered': { text: 'Delivered', color: '#34d399', bg: 'rgba(52, 211, 153, 0.2)' },
+                'exception': { text: 'Exception', color: '#f87171', bg: 'rgba(248, 113, 113, 0.2)' }
+            };
+            const config = statusColors[shipment.status];
+            statusBadge.style.background = config.bg;
+            statusBadge.style.color = config.color;
+            statusBadge.style.border = `1px solid ${config.color}`;
+            statusBadge.textContent = config.text;
+            
+            const timeline = document.getElementById('trackingTimeline');
+            timeline.innerHTML = '';
+            
+            shipment.timeline.slice().reverse().forEach((event, index) => {
+                const isFirst = index === 0;
+                const item = document.createElement('div');
+                item.style.cssText = 'display: flex; gap: 1rem; margin-bottom: 1rem;';
+                item.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <div style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: ${isFirst ? '#3b82f6' : '#475569'};"></div>
+                        ${index < shipment.timeline.length - 1 ? '<div style="width: 2px; flex: 1; background: #334155; margin-top: 0.25rem;"></div>' : ''}
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: ${isFirst ? '600' : '400'}; color: ${isFirst ? '#60a5fa' : '#cbd5e1'}; font-size: 0.875rem; margin-bottom: 0.25rem;">${event.status}</div>
+                        <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">${event.location}</div>
+                        <div style="font-size: 0.625rem; color: #475569;">${formatDate(event.time)}</div>
+                    </div>
+                `;
+                timeline.appendChild(item);
+            });
+        }
+
+        // Admin Functions
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const id = document.getElementById('adminId').value;
+            const pass = document.getElementById('adminPass').value;
+            
+            if (id === store.credentials.adminId && pass === store.credentials.password) {
+                store.currentUser = { id: 'admin', name: 'Administrator' };
+                document.getElementById('adminLogin').classList.add('hidden');
+                document.getElementById('adminDashboard').classList.remove('hidden');
+                document.getElementById('currentDate').textContent = new Date().toLocaleDateString();
+                refreshAdminData();
+                showToast('Welcome Admin!');
+            } else {
+                showToast('Wrong password!', 'error');
+            }
+        }
+
+        function adminLogout() {
+            store.currentUser = null;
+            document.getElementById('adminDashboard').classList.add('hidden');
+            document.getElementById('adminLogin').classList.remove('hidden');
+            document.getElementById('adminPass').value = '';
+            showSection('home');
+        }
+
+        function showAdminTab(tabName) {
+            // Update nav styles
+            document.querySelectorAll('.admin-nav').forEach(btn => {
+                btn.style.background = 'none';
+                btn.style.color = '#94a3b8';
+                btn.style.border = 'none';
+            });
+            
+            // Highlight active
+            const activeBtn = Array.from(document.querySelectorAll('.admin-nav')).find(btn => 
+                btn.getAttribute('onclick')?.includes(`'${tabName}'`)
+            );
+            if (activeBtn) {
+                activeBtn.style.background = 'rgba(37, 99, 235, 0.2)';
+                activeBtn.style.color = '#60a5fa';
+                activeBtn.style.border = '1px solid rgba(37, 99, 235, 0.3)';
+            }
+            
+            // Show tab
+            document.querySelectorAll('.admin-tab').forEach(tab => tab.classList.add('hidden'));
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            
+            if (tabName === 'shipments') renderShipmentsList();
+            if (tabName === 'chats') renderChatList();
+        }
+
+        function refreshAdminData() {
+            document.getElementById('totalShipments').textContent = store.shipments.length;
+            
+            const unread = store.chats.reduce((sum, c) => sum + c.unread, 0);
+            document.getElementById('activeChatsCount').textContent = unread;
+            
+            const badge = document.getElementById('unreadBadge');
+            const mobileBadge = document.getElementById('mobileUnreadBadge');
+            
+            if (unread > 0) {
+                badge.textContent = unread;
+                badge.classList.remove('hidden');
+                mobileBadge.textContent = unread;
+                mobileBadge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+                mobileBadge.classList.add('hidden');
+            }
+            
+            renderShipmentsList();
+            renderChatList();
+        }
+        function renderShipmentsList() {
+            const container = document.getElementById('shipmentsList');
+            container.innerHTML = '';
+            
+            if (store.shipments.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">No shipments yet. Create one!</div>';
+                return;
+            }
+            
+            store.shipments.forEach(shipment => {
+                const statusColors = {
+                    'transit': '#60a5fa',
+                    'customs': '#fbbf24',
+                    'out': '#c084fc',
+                    'delivered': '#34d399',
+                    'exception': '#f87171'
+                };
+                
+                const statusText = {
+                    'transit': 'In Transit',
+                    'customs': 'Customs',
+                    'out': 'Out for Delivery',
+                    'delivered': 'Delivered',
+                    'exception': 'Exception'
+                };
+                
+                const item = document.createElement('div');
+                item.className = 'glass-panel';
+                item.style.cssText = 'padding: 1rem; border-radius: 0.75rem; cursor: pointer;';
+                item.onclick = () => openEditModal(shipment.code);
+                
+                item.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                        <div style="font-family: monospace; color: #60a5fa; font-weight: 600;">${shipment.code}</div>
+                        <span style="padding: 0.25rem 0.5rem; background: ${statusColors[shipment.status]}20; color: ${statusColors[shipment.status]}; border-radius: 0.25rem; font-size: 0.75rem;">${statusText[shipment.status]}</span>
+                    </div>
+                    <div style="font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.25rem;">${shipment.customer}</div>
+                    <div style="font-size: 0.75rem; color: #64748b;">${shipment.origin.split(',')[0]} → ${shipment.destination.split(',')[0]}</div>
+                    <div style="font-size: 0.625rem; color: #475569; margin-top: 0.5rem;">Last update: ${formatDate(shipment.updatedAt)}</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function createShipment(e) {
+            e.preventDefault();
+            
+            const newShipment = {
+                code: generateTrackingCode(),
+                customer: document.getElementById('newCustomerName').value,
+                email: document.getElementById('newCustomerEmail').value,
+                origin: document.getElementById('newOrigin').value,
+                destination: document.getElementById('newDestination').value,
+                status: 'transit',
+                service: document.querySelector('input[name="serviceType"]:checked').value,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                timeline: [
+                    {
+                        time: new Date().toISOString(),
+                        location: document.getElementById('newOrigin').value,
+                        status: 'Shipment created and processed'
+                    }
+                ]
+            };
+            
+            store.shipments.unshift(newShipment);
+            showToast(`Created: ${newShipment.code}`);
+            
+            // Reset form
+            document.getElementById('newCustomerName').value = '';
+            document.getElementById('newCustomerEmail').value = '';
+            
+            // Switch to shipments tab
+            showAdminTab('shipments');
+            refreshAdminData();
+        }
+
+        function openEditModal(code) {
+            store.currentEditCode = code;
+            const shipment = store.shipments.find(s => s.code === code);
+            if (!shipment) return;
+            
+            document.getElementById('editTrackingCode').value = code;
+            
+            // Set current location in dropdown
+            const locationSelect = document.getElementById('editLocation');
+            const currentLocation = shipment.timeline[shipment.timeline.length - 1]?.location || '';
+            let locationFound = false;
+            for (let i = 0; i < locationSelect.options.length; i++) {
+                if (locationSelect.options[i].value === currentLocation) {
+                    locationSelect.selectedIndex = i;
+                    locationFound = true;
+                    break;
+                }
+            }
+            
+            document.getElementById('editStatus').value = shipment.status;
+            document.getElementById('editNotes').value = '';
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            store.currentEditCode = null;
+        }
+
+        function saveShipmentEdit(e) {
+            e.preventDefault();
+            const code = document.getElementById('editTrackingCode').value;
+            const shipment = store.shipments.find(s => s.code === code);
+            
+            if (!shipment) return;
+            
+            const newLocation = document.getElementById('editLocation').value;
+            const newStatus = document.getElementById('editStatus').value;
+            const notes = document.getElementById('editNotes').value;
+            
+            shipment.status = newStatus;
+            shipment.updatedAt = new Date().toISOString();
+            shipment.timeline.push({
+                time: new Date().toISOString(),
+                location: newLocation,
+                status: notes || `Status updated to ${newStatus}`
+            });
+            
+            showToast('Shipment updated!');
+            closeEditModal();
+            renderShipmentsList();
+        }
+
+        function deleteShipment(code) {
+            if (confirm('Delete this shipment?')) {
+                store.shipments = store.shipments.filter(s => s.code !== code);
+                renderShipmentsList();
+                showToast('Deleted');
+            }
+        }
+
+        // Chat Functions
+        function openChat() {
+            document.getElementById('customerChatWidget').classList.remove('hidden');
+            document.getElementById('chatToggleBtn').classList.add('hidden');
+            
+            // Focus input after animation
+            setTimeout(() => {
+                document.getElementById('customerMessageInput').focus();
+            }, 300);
+        }
+
+        function closeChat() {
+            document.getElementById('customerChatWidget').classList.add('hidden');
+            document.getElementById('chatToggleBtn').classList.remove('hidden');
+        }
+
+        function sendCustomerMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('customerMessageInput');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            const container = document.getElementById('customerChatMessages');
+            
+            // Add customer message
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble sent';
+            bubble.innerHTML = `
+                <p style="font-size: 0.875rem;">${text}</p>
+                <span style="font-size: 0.75rem; color: #bfdbfe; display: block; margin-top: 0.25rem;">You • Just now</span>
+            `;
+            container.appendChild(bubble);
+            
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+            
+            // Clear input
+            input.value = '';
+            
+            // Simulate admin reply after 2 seconds
+            setTimeout(() => {
+                const reply = document.createElement('div');
+                reply.className = 'chat-bubble received';
+                reply.innerHTML = `
+                    <p style="font-size: 0.875rem;">Thank you for your message. Our team will respond shortly. For urgent inquiries, please call +1 (888) 555-SHIP.</p>
+                    <span style="font-size: 0.75rem; color: #94a3b8; display: block; margin-top: 0.25rem;">Support • Just now</span>
+                `;
+                container.appendChild(reply);
+                container.scrollTop = container.scrollHeight;
+                
+                // Add to admin chat list (simulate receiving)
+                simulateIncomingChat(text);
+            }, 2000);
+        }
+
+        function simulateIncomingChat(customerText) {
+            // In real app, this would come from server
+            // For demo, we'll add to first chat if exists
+            if (store.chats.length > 0) {
+                const chat = store.chats[0];
+                chat.messages.push({
+                    sender: 'customer',
+                    text: customerText,
+                    time: new Date().toISOString()
+                });
+                chat.unread++;
+                refreshAdminData();
+            }
+        }
+
+        function renderChatList() {
+            const container = document.getElementById('adminChatList');
+            container.innerHTML = '';
+            
+            if (store.chats.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">No messages yet</div>';
+                return;
+            }
+            
+            store.chats.forEach(chat => {
+                const item = document.createElement('div');
+                item.className = 'glass-panel';
+                item.style.cssText = `padding: 1rem; border-radius: 0.75rem; cursor: pointer; ${chat.unread > 0 ? 'border-left: 3px solid #ef4444;' : ''}`;
+                item.onclick = () => openAdminChat(chat.id);
+                
+                const lastMsg = chat.messages[chat.messages.length - 1];
+                
+                item.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                        <div style="font-weight: 600; font-size: 0.875rem;">${chat.customer}</div>
+                        ${chat.unread > 0 ? `<span style="background: #ef4444; color: white; border-radius: 50%; width: 1.25rem; height: 1.25rem; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">${chat.unread}</span>` : ''}
+                    </div>
+                    <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">${chat.trackingCode}</div>
+                    <div style="font-size: 0.875rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${lastMsg.text}</div>
+                    <div style="font-size: 0.625rem; color: #475569; margin-top: 0.5rem;">${formatDate(lastMsg.time)}</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function openAdminChat(chatId) {
+            store.activeChat = chatId;
+            const chat = store.chats.find(c => c.id === chatId);
+            if (!chat) return;
+            
+            // Mark as read
+            chat.unread = 0;
+            refreshAdminData();
+            
+            // Show chat view
+            document.getElementById('adminChatList').classList.add('hidden');
+            document.getElementById('adminChatView').classList.remove('hidden');
+            document.getElementById('chatCustomerName').textContent = chat.customer;
+            document.getElementById('chatTrackingCode').textContent = chat.trackingCode;
+            
+            // Render messages
+            const container = document.getElementById('adminChatMessages');
+            container.innerHTML = '';
+            
+            chat.messages.forEach(msg => {
+                const bubble = document.createElement('div');
+                bubble.className = `chat-bubble ${msg.sender === 'admin' ? 'sent' : 'received'}`;
+                bubble.style.marginBottom = '0.75rem';
+                bubble.innerHTML = `
+                    <p style="font-size: 0.875rem;">${msg.text}</p>
+                    <span style="font-size: 0.75rem; ${msg.sender === 'admin' ? 'color: #bfdbfe;' : 'color: #94a3b8;'} display: block; margin-top: 0.25rem;">
+                        ${msg.sender === 'admin' ? 'You' : chat.customer} • ${formatDate(msg.time)}
+                    </span>
+                `;
+                container.appendChild(bubble);
+            });
+            
+            container.scrollTop = container.scrollHeight;
+            
+            // Focus reply input
+            setTimeout(() => {
+                document.getElementById('adminReplyInput').focus();
+            }, 100);
+        }
+
+        function closeAdminChat() {
+            document.getElementById('adminChatList').classList.remove('hidden');
+            document.getElementById('adminChatView').classList.add('hidden');
+            store.activeChat = null;
+            renderChatList();
+        }
+
+        function sendAdminReply(e) {
+            e.preventDefault();
+            const input = document.getElementById('adminReplyInput');
+            const text = input.value.trim();
+            if (!text || !store.activeChat) return;
+            
+            const chat = store.chats.find(c => c.id === store.activeChat);
+            if (!chat) return;
+            
+            chat.messages.push({
+                sender: 'admin',
+                text: text,
+                time: new Date().toISOString()
+            });
+            
+            input.value = '';
+            openAdminChat(store.activeChat); // Refresh view
+            
+            // Simulate customer reply after 3 seconds
+            setTimeout(() => {
+                chat.messages.push({
+                    sender: 'customer',
+                    text: 'Thank you for the update!',
+                    time: new Date().toISOString()
+                });
+                if (store.activeChat === chat.id) {
+                    openAdminChat(chat.id);
+                } else {
+                    chat.unread++;
+                    refreshAdminData();
+                }
+            }, 3000);
+        }
+
+        // Password Change
+        function changePassword(e) {
+            e.preventDefault();
+            
+            const current = document.getElementById('currentPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            
+            if (current !== store.credentials.password) {
+                showToast('Current password wrong!', 'error');
+                return;
+            }
+            
+            if (newPass !== confirm) {
+                showToast('Passwords do not match!', 'error');
+                return;
+            }
+            
+            if (newPass.length < 6) {
+                showToast('Min 6 characters!', 'error');
+                return;
+            }
+            
+            store.credentials.password = newPass;
+            
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            
+            showToast('Password updated!');
+        }
+
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            showToast('Message sent! We will reply soon.');
+            e.target.reset();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set date
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString();
+            
+            // Enter key on tracking input
+            document.getElementById('trackingInput')?.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') trackShipment();
+            });
+            
+            // Ensure inputs are focusable on mobile
+            document.querySelectorAll('input, textarea, select').forEach(el => {
+                el.addEventListener('touchstart', function(e) {
+                    e.stopPropagation();
+                }, { passive: true });
+            });
+        });
+
+        // Prevent double-tap zoom on buttons
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
+    </script>
+</body>
+</html>
+
