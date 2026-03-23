@@ -22,12 +22,6 @@
         }
         .mono { font-family: 'JetBrains Mono', monospace; }
         
-        /* Prevent zoom on input focus for mobile */
-        input, select, textarea {
-            font-size: 16px !important;
-            touch-action: manipulation;
-        }
-        
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
@@ -48,6 +42,10 @@
         }
         @keyframes ping {
             75%, 100% { transform: scale(2); opacity: 0; }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
         
         .animate-slide-in { animation: slideIn 0.6s ease-out forwards; }
@@ -114,10 +112,43 @@
             min-width: 44px;
         }
         
-        /* Ensure inputs are tappable */
-        input, textarea, select, button {
-            touch-action: manipulation;
-            -webkit-appearance: none;
+        /* FIXED INPUT STYLES - Dark background with white text */
+        .dark-input, input[type="text"], input[type="password"], input[type="email"], select, textarea {
+            background-color: #0f172a !important;
+            color: #ffffff !important;
+            border: 2px solid #334155 !important;
+            font-size: 16px !important;
+            padding: 0.875rem !important;
+            border-radius: 0.5rem !important;
+            width: 100% !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+        
+        .dark-input:focus, input:focus, select:focus, textarea:focus {
+            border-color: #3b82f6 !important;
+            outline: none !important;
+            background-color: #1e293b !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+        
+        /* For select dropdowns */
+        select.dark-input, select {
+            background-color: #0f172a !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+        
+        /* Placeholder color */
+        .dark-input::placeholder, input::placeholder, textarea::placeholder {
+            color: #64748b !important;
+            -webkit-text-fill-color: #64748b !important;
+        }
+        
+        /* Ensure all form elements are visible */
+        input, textarea, select {
+            background: #0f172a;
+            color: #ffffff;
+            -webkit-text-fill-color: #ffffff;
         }
         
         /* Fallback styles */
@@ -138,6 +169,17 @@
                 font-size: 16px !important;
             }
         }
+
+        /* Secret admin trigger hint */
+        .secret-trigger {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            width: 20px;
+            height: 20px;
+            opacity: 0;
+            z-index: 9999;
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 overflow-x-hidden">
@@ -146,21 +188,20 @@
     <nav style="position: fixed; width: 100%; z-index: 50; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.1); top: 0;">
         <div style="max-width: 80rem; margin: 0 auto; padding: 0 1rem;">
             <div style="display: flex; align-items: center; justify-content: space-between; height: 4rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;" onclick="showSection('home')">
+                <!-- Logo with secret tap trigger -->
+                <div style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;" onclick="handleLogoClick()" id="logoTrigger">
                     <div style="width: 2.5rem; height: 2.5rem; background: linear-gradient(135deg, #3b82f6, #9333ea); border-radius: 0.75rem; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-shipping-fast" style="color: white; font-size: 1.125rem;"></i>
                     </div>
                     <span style="font-size: 1.25rem; font-weight: 700;">Global<span class="gradient-text">Ship</span> Pro</span>
                 </div>
                 
-                <!-- Desktop Menu -->
+                <!-- Desktop Menu - NO ADMIN BUTTON VISIBLE -->
                 <div style="display: none; align-items: center; gap: 2rem;" class="desktop-only">
                     <button onclick="showSection('track')" style="color: #cbd5e1; background: none; font-size: 0.875rem; font-weight: 500; padding: 0.5rem;">Track</button>
                     <button onclick="showSection('services')" style="color: #cbd5e1; background: none; font-size: 0.875rem; font-weight: 500; padding: 0.5rem;">Services</button>
                     <button onclick="showSection('contact')" style="color: #cbd5e1; background: none; font-size: 0.875rem; font-weight: 500; padding: 0.5rem;">Contact</button>
-                    <button onclick="showSection('admin')" style="padding: 0.5rem 1.25rem; background: #2563eb; color: white; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; border: none;">
-                        <i class="fas fa-lock"></i> Admin
-                    </button>
+                    <!-- NO VISIBLE ADMIN BUTTON -->
                 </div>
 
                 <!-- Mobile Menu Button -->
@@ -170,13 +211,13 @@
             </div>
         </div>
         
-        <!-- Mobile Menu Dropdown -->
+        <!-- Mobile Menu Dropdown - NO ADMIN OPTION VISIBLE -->
         <div id="mobileMenu" style="display: none; background: rgba(15, 23, 42, 0.98); border-top: 1px solid rgba(255,255,255,0.1); position: absolute; width: 100%; left: 0;">
             <div style="padding: 1rem;">
                 <button onclick="showSection('track'); toggleMobileMenu()" style="display: block; width: 100%; text-align: left; padding: 1rem; color: #cbd5e1; background: none; border: none; font-size: 1rem; border-bottom: 1px solid #1e293b;">Track Shipment</button>
                 <button onclick="showSection('services'); toggleMobileMenu()" style="display: block; width: 100%; text-align: left; padding: 1rem; color: #cbd5e1; background: none; border: none; font-size: 1rem; border-bottom: 1px solid #1e293b;">Services</button>
-                <button onclick="showSection('contact'); toggleMobileMenu()" style="display: block; width: 100%; text-align: left; padding: 1rem; color: #cbd5e1; background: none; border: none; font-size: 1rem; border-bottom: 1px solid #1e293b;">Contact Us</button>
-                <button onclick="showSection('admin'); toggleMobileMenu()" style="display: block; width: 100%; text-align: left; padding: 1rem; color: #60a5fa; background: none; border: none; font-size: 1rem; font-weight: 600;">Admin Portal</button>
+                <button onclick="showSection('contact'); toggleMobileMenu()" style="display: block; width: 100%; text-align: left; padding: 1rem; color: #cbd5e1; background: none; border: none; font-size: 1rem;">Contact Us</button>
+                <!-- NO ADMIN OPTION VISIBLE -->
             </div>
         </div>
     </nav>
@@ -248,7 +289,7 @@
             <div class="glass-panel" style="border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem;">
                 <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem;">
                     <input type="text" id="trackingInput" placeholder="GSP-2026-001" 
-                        style="flex: 1; font-family: monospace; text-transform: uppercase; font-size: 16px; padding: 0.875rem; border-radius: 0.5rem; border: 1px solid #334155; background: #0f172a; color: white;">
+                        class="dark-input mono" style="flex: 1; text-transform: uppercase;">
                     <button onclick="trackShipment()" class="touch-btn" style="padding: 0 1.5rem; background: #2563eb; color: white; border-radius: 0.5rem; font-weight: 600; border: none; white-space: nowrap;">
                         <i class="fas fa-search"></i> Track
                     </button>
@@ -349,15 +390,15 @@
                 <form onsubmit="handleContactSubmit(event)">
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Name</label>
-                        <input type="text" required style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                        <input type="text" required class="dark-input">
                     </div>
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Email</label>
-                        <input type="email" required style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                        <input type="email" required class="dark-input">
                     </div>
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Message</label>
-                        <textarea rows="4" required style="width: 100%; font-size: 16px; padding: 0.75rem; resize: none;"></textarea>
+                        <textarea rows="4" required class="dark-input" style="resize: none;"></textarea>
                     </div>
                     <button type="submit" class="touch-btn" style="width: 100%; padding: 1rem; background: linear-gradient(135deg, #2563eb, #9333ea); color: white; border-radius: 0.75rem; font-weight: 600; border: none;">
                         Send Message
@@ -367,10 +408,10 @@
         </div>
     </section>
 
-    <!-- ADMIN SECTION -->
+    <!-- HIDDEN ADMIN SECTION -->
     <section id="admin" class="section-view hidden">
         
-        <!-- Login -->
+        <!-- Login - NO VISIBLE CREDENTIALS, NO DEMO BOX -->
         <div id="adminLogin" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; background: #020617;">
             <div class="glass-panel" style="padding: 2rem; border-radius: 1rem; width: 100%; max-width: 24rem;">
                 <div style="text-align: center; margin-bottom: 2rem;">
@@ -378,26 +419,27 @@
                         <i class="fas fa-lock" style="color: white; font-size: 1.5rem;"></i>
                     </div>
                     <h2 style="font-size: 1.5rem; font-weight: 700;">Admin Portal</h2>
-                    <p style="color: #94a3b8; font-size: 0.875rem;">Authorized personnel only</p>
+                    <p style="color: #94a3b8; font-size: 0.875rem; margin-top: 0.5rem;">Authorized personnel only</p>
                 </div>
                 
                 <form onsubmit="handleAdminLogin(event)">
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Admin ID</label>
-                        <input type="text" id="adminId" value="admin" style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                        <input type="text" id="adminId" class="dark-input" placeholder="Enter admin ID" autocomplete="off">
                     </div>
                     <div style="margin-bottom: 1.5rem;">
                         <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Password</label>
-                        <input type="password" id="adminPass" value="admin123" style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                        <input type="password" id="adminPass" class="dark-input" placeholder="Enter password" autocomplete="off">
                     </div>
                     <button type="submit" class="touch-btn" style="width: 100%; padding: 1rem; background: #2563eb; color: white; border-radius: 0.75rem; font-weight: 600; border: none;">
                         Access Dashboard
                     </button>
                 </form>
                 
-                <div style="margin-top: 1rem; padding: 1rem; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.2); border-radius: 0.5rem;">
-                    <p style="font-size: 0.75rem; color: #fbbf24; text-align: center;">
-                        <i class="fas fa-info-circle"></i> Demo: admin / admin123
+                <!-- NO DEMO CREDENTIALS DISPLAYED -->
+                <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 0.5rem;">
+                    <p style="font-size: 0.75rem; color: #f87171; text-align: center;">
+                        <i class="fas fa-shield-alt"></i> Restricted Access - Authorized Only
                     </p>
                 </div>
             </div>
@@ -406,7 +448,7 @@
         <!-- Dashboard -->
         <div id="adminDashboard" class="hidden" style="display: flex; min-height: 100vh; background: #020617;">
             
-            <!-- Sidebar -->
+            <!-- Sidebar Desktop -->
             <aside style="width: 16rem; background: #0f172a; border-right: 1px solid #1e293b; position: fixed; height: 100vh; overflow-y: auto; display: none;" class="sidebar-desktop">
                 <div style="padding: 1.5rem; border-bottom: 1px solid #1e293b;">
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -495,9 +537,7 @@
                             <i class="fas fa-plus"></i> New
                         </button>
                     </div>
-                    <div id="shipmentsList" style="display: flex; flex-direction: column; gap: 0.75rem;">
-                        <!-- Dynamic -->
-                    </div>
+                    <div id="shipmentsList" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
                 </div>
 
                 <!-- TAB: Create -->
@@ -507,16 +547,16 @@
                         <form onsubmit="createShipment(event)">
                             <div style="margin-bottom: 1rem;">
                                 <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Customer Name *</label>
-                                <input type="text" id="newCustomerName" required style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                                <input type="text" id="newCustomerName" required class="dark-input" placeholder="John Smith">
                             </div>
                             <div style="margin-bottom: 1rem;">
                                 <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Customer Email *</label>
-                                <input type="email" id="newCustomerEmail" required style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                                <input type="email" id="newCustomerEmail" required class="dark-input" placeholder="john@email.com">
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                                 <div>
                                     <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">From</label>
-                                    <select id="newOrigin" style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                                    <select id="newOrigin" class="dark-input">
                                         <option>New York, USA</option>
                                         <option>London, UK</option>
                                         <option>Tokyo, Japan</option>
@@ -527,7 +567,7 @@
                                 </div>
                                 <div>
                                     <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">To</label>
-                                    <select id="newDestination" style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                                    <select id="newDestination" class="dark-input">
                                         <option>London, UK</option>
                                         <option>New York, USA</option>
                                         <option>Tokyo, Japan</option>
@@ -544,21 +584,21 @@
                                         <input type="radio" name="serviceType" value="air" checked style="display: none;">
                                         <div style="padding: 0.75rem; border: 1px solid #334155; background: #0f172a; border-radius: 0.5rem; text-align: center;">
                                             <i class="fas fa-plane" style="color: #60a5fa;"></i>
-                                            <div style="font-size: 0.75rem; margin-top: 0.25rem;">Air</div>
+                                            <div style="font-size: 0.75rem; margin-top: 0.25rem; color: #cbd5e1;">Air</div>
                                         </div>
                                     </label>
                                     <label style="cursor: pointer;">
                                         <input type="radio" name="serviceType" value="ocean" style="display: none;">
                                         <div style="padding: 0.75rem; border: 1px solid #334155; background: #0f172a; border-radius: 0.5rem; text-align: center;">
                                             <i class="fas fa-ship" style="color: #c084fc;"></i>
-                                            <div style="font-size: 0.75rem; margin-top: 0.25rem;">Ocean</div>
+                                            <div style="font-size: 0.75rem; margin-top: 0.25rem; color: #cbd5e1;">Ocean</div>
                                         </div>
                                     </label>
                                     <label style="cursor: pointer;">
                                         <input type="radio" name="serviceType" value="ground" style="display: none;">
                                         <div style="padding: 0.75rem; border: 1px solid #334155; background: #0f172a; border-radius: 0.5rem; text-align: center;">
                                             <i class="fas fa-truck" style="color: #34d399;"></i>
-                                            <div style="font-size: 0.75rem; margin-top: 0.25rem;">Ground</div>
+                                            <div style="font-size: 0.75rem; margin-top: 0.25rem; color: #cbd5e1;">Ground</div>
                                         </div>
                                     </label>
                                 </div>
@@ -573,9 +613,7 @@
                 <!-- TAB: Chats -->
                 <div id="tab-chats" class="admin-tab hidden">
                     <h3 style="font-weight: 700; margin-bottom: 1rem;">Customer Messages</h3>
-                    <div id="adminChatList" style="display: flex; flex-direction: column; gap: 0.75rem;">
-                        <!-- Dynamic -->
-                    </div>
+                    <div id="adminChatList" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
                     <div id="adminChatView" class="hidden" style="margin-top: 1rem;">
                         <div class="glass-panel" style="border-radius: 1rem; overflow: hidden;">
                             <div style="padding: 1rem; border-bottom: 1px solid #334155; background: rgba(15, 23, 42, 0.5);">
@@ -592,7 +630,7 @@
                             <div id="adminChatMessages" style="height: 300px; overflow-y: auto; padding: 1rem;"></div>
                             <div style="padding: 1rem; border-top: 1px solid #334155;">
                                 <form onsubmit="sendAdminReply(event)" style="display: flex; gap: 0.5rem;">
-                                    <input type="text" id="adminReplyInput" placeholder="Type reply..." style="flex: 1; font-size: 16px; padding: 0.75rem;">
+                                    <input type="text" id="adminReplyInput" placeholder="Type reply..." class="dark-input" style="flex: 1;">
                                     <button type="submit" class="touch-btn" style="padding: 0 1rem; background: #2563eb; color: white; border-radius: 0.5rem; border: none;">
                                         <i class="fas fa-paper-plane"></i>
                                     </button>
@@ -609,13 +647,13 @@
                         <h4 style="font-weight: 600; margin-bottom: 1rem; color: #60a5fa;">Change Password</h4>
                         <form onsubmit="changePassword(event)">
                             <div style="margin-bottom: 1rem;">
-                                <input type="password" id="currentPassword" placeholder="Current password" required style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                                <input type="password" id="currentPassword" placeholder="Current password" required class="dark-input">
                             </div>
                             <div style="margin-bottom: 1rem;">
-                                <input type="password" id="newPassword" placeholder="New password (min 6 chars)" required minlength="6" style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                                <input type="password" id="newPassword" placeholder="New password (min 6 chars)" required minlength="6" class="dark-input">
                             </div>
                             <div style="margin-bottom: 1rem;">
-                                <input type="password" id="confirmPassword" placeholder="Confirm new password" required style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                                <input type="password" id="confirmPassword" placeholder="Confirm new password" required class="dark-input">
                             </div>
                             <button type="submit" class="touch-btn" style="width: 100%; padding: 0.875rem; background: #2563eb; color: white; border-radius: 0.5rem; font-weight: 600; border: none;">
                                 Update Password
@@ -657,17 +695,12 @@
             </button>
         </div>
         
-        <div id="customerChatMessages" style="flex: 1; overflow-y: auto; padding: 1rem;">
-            <div class="chat-bubble received">
-                <p style="font-size: 0.875rem;">Hello! Welcome to GlobalShip Pro. How can I help you today?</p>
-                <span style="font-size: 0.75rem; color: #94a3b8; display: block; margin-top: 0.25rem;">Support • Just now</span>
-            </div>
-        </div>
+        <div id="customerChatMessages" style="flex: 1; overflow-y: auto; padding: 1rem;"></div>
         
         <div style="padding: 1rem; background: #0f172a; border-top: 1px solid #334155;">
             <form onsubmit="sendCustomerMessage(event)" style="display: flex; gap: 0.5rem;">
                 <input type="text" id="customerMessageInput" placeholder="Type your message..." 
-                    style="flex: 1; font-size: 16px; padding: 0.875rem; border-radius: 1.5rem; border: 1px solid #334155; background: #1e293b; color: white;">
+                    style="flex: 1; font-size: 16px; padding: 0.875rem 1rem; border-radius: 1.5rem; border: 1px solid #334155; background: #1e293b; color: white; -webkit-text-fill-color: white;">
                 <button type="submit" class="touch-btn" style="width: 3rem; height: 3rem; background: #2563eb; color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-paper-plane"></i>
                 </button>
@@ -695,7 +728,7 @@
                 
                 <div style="margin-bottom: 1rem;">
                     <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Current Location</label>
-                    <select id="editLocation" style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                    <select id="editLocation" class="dark-input">
                         <option>New York, USA (JFK)</option>
                         <option>London, UK (Heathrow)</option>
                         <option>Paris, France (CDG)</option>
@@ -715,7 +748,7 @@
                 
                 <div style="margin-bottom: 1rem;">
                     <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Status</label>
-                    <select id="editStatus" style="width: 100%; font-size: 16px; padding: 0.75rem;">
+                    <select id="editStatus" class="dark-input">
                         <option value="transit">In Transit</option>
                         <option value="customs">Customs Clearance</option>
                         <option value="out">Out for Delivery</option>
@@ -726,7 +759,7 @@
                 
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display: block; font-size: 0.875rem; color: #cbd5e1; margin-bottom: 0.5rem;">Notes</label>
-                    <textarea id="editNotes" rows="2" placeholder="Update details..." style="width: 100%; font-size: 16px; padding: 0.75rem; resize: none;"></textarea>
+                    <textarea id="editNotes" rows="2" placeholder="Update details..." class="dark-input" style="resize: none;"></textarea>
                 </div>
                 
                 <div style="display: flex; gap: 0.75rem;">
@@ -754,8 +787,81 @@
     </style>
 
     <script>
-        // Data Store
-        const store = {
+        // SECRET ADMIN ACCESS CONFIGURATION
+        // Complex password: Admin2026!Secure#
+        // To generate new encoded password: btoa('YOUR_PASSWORD_HERE')
+        const ENCODED_PASSWORD = 'QWRtaW4yMDI2IVNlY3VyZSM='; // Base64 encoded - FIXED
+        
+        // Secret access methods:
+        // 1. URL: yoursite.com/#admin
+        // 2. Desktop: Ctrl + Shift + A
+        // 3. Mobile: Tap logo 5 times quickly
+        
+        let logoTapCount = 0;
+        let lastTapTime = 0;
+        
+        function handleLogoClick() {
+            const currentTime = new Date().getTime();
+            
+            // Reset if too much time passed (2 seconds)
+            if (currentTime - lastTapTime > 2000) {
+                logoTapCount = 0;
+            }
+            
+            logoTapCount++;
+            lastTapTime = currentTime;
+            
+            // Trigger secret access on 5 rapid taps
+            if (logoTapCount >= 5) {
+                logoTapCount = 0;
+                showSection('admin');
+            }
+        }
+        
+        // Keyboard shortcut for desktop (Ctrl + Shift + A)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+                e.preventDefault();
+                showSection('admin');
+            }
+        });
+        
+        // Check URL hash on load
+        window.addEventListener('hashchange', checkAdminHash);
+        
+        function checkAdminHash() {
+            if (window.location.hash === '#admin') {
+                showSection('admin');
+            }
+        }
+        
+        // Check on initial load
+        if (window.location.hash === '#admin') {
+            setTimeout(() => showSection('admin'), 100);
+        }
+
+        // Data Store with LocalStorage
+        const STORAGE_KEY = 'globalship_admin_data';
+        
+        function getStoredData() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                return JSON.parse(stored);
+            }
+            return null;
+        }
+        
+        function saveStoredData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+        
+        // Default data - NO VISIBLE PASSWORDS
+        const defaultData = {
+            credentials: {
+                adminId: 'admin',
+                password: ENCODED_PASSWORD, // Encoded, not plaintext
+                lastChanged: null
+            },
             shipments: [
                 {
                     code: 'GSP-2026-001',
@@ -812,15 +918,26 @@
                         { sender: 'admin', text: 'Checking now, one moment please.', time: new Date(Date.now() - 7100000).toISOString() }
                     ]
                 }
-            ],
+            ]
+        };
+        
+        const storedData = getStoredData();
+        const store = {
+            shipments: storedData?.shipments || defaultData.shipments,
+            chats: storedData?.chats || defaultData.chats,
+            credentials: storedData?.credentials || defaultData.credentials,
             currentUser: null,
             activeChat: null,
-            currentEditCode: null,
-            credentials: {
-                adminId: 'admin',
-                password: 'admin123'
-            }
+            currentEditCode: null
         };
+        
+        function persistData() {
+            saveStoredData({
+                credentials: store.credentials,
+                shipments: store.shipments,
+                chats: store.chats
+            });
+        }
 
         // Utilities
         function generateTrackingCode() {
@@ -862,18 +979,16 @@
                 target.classList.remove('hidden');
                 window.scrollTo(0, 0);
             }
-            // Close mobile menu if open
             document.getElementById('mobileMenu').style.display = 'none';
         }
 
         function toggleMobileMenu(e) {
-            if (e) e.stopPropagation();
+            if (e && e.stopPropagation) e.stopPropagation();
             const menu = document.getElementById('mobileMenu');
             const currentDisplay = window.getComputedStyle(menu).display;
             menu.style.display = currentDisplay === 'none' ? 'block' : 'none';
         }
 
-        // Close mobile menu when clicking outside
         document.addEventListener('click', function(e) {
             const menu = document.getElementById('mobileMenu');
             const btn = document.getElementById('mobileMenuBtn');
@@ -941,21 +1056,30 @@
             });
         }
 
-        // Admin Functions
+        // Admin Functions - ENHANCED SECURITY
         function handleAdminLogin(e) {
             e.preventDefault();
             const id = document.getElementById('adminId').value;
             const pass = document.getElementById('adminPass').value;
             
-            if (id === store.credentials.adminId && pass === store.credentials.password) {
+            // Verify credentials with encoded password
+            const encodedInput = btoa(pass);
+            
+            if (id === store.credentials.adminId && encodedInput === store.credentials.password) {
                 store.currentUser = { id: 'admin', name: 'Administrator' };
                 document.getElementById('adminLogin').classList.add('hidden');
                 document.getElementById('adminDashboard').classList.remove('hidden');
                 document.getElementById('currentDate').textContent = new Date().toLocaleDateString();
                 refreshAdminData();
                 showToast('Welcome Admin!');
+                
+                // Clear inputs for security
+                document.get
+                // Clear inputs for security
+                document.getElementById('adminId').value = '';
+                document.getElementById('adminPass').value = '';
             } else {
-                showToast('Wrong password!', 'error');
+                showToast('Invalid credentials', 'error');
             }
         }
 
@@ -963,29 +1087,27 @@
             store.currentUser = null;
             document.getElementById('adminDashboard').classList.add('hidden');
             document.getElementById('adminLogin').classList.remove('hidden');
-            document.getElementById('adminPass').value = '';
             showSection('home');
         }
 
         function showAdminTab(tabName) {
-            // Update nav styles
             document.querySelectorAll('.admin-nav').forEach(btn => {
+                btn.classList.remove('active');
                 btn.style.background = 'none';
                 btn.style.color = '#94a3b8';
                 btn.style.border = 'none';
             });
             
-            // Highlight active
-            const activeBtn = Array.from(document.querySelectorAll('.admin-nav')).find(btn => 
+            const clickedBtn = Array.from(document.querySelectorAll('.admin-nav')).find(btn => 
                 btn.getAttribute('onclick')?.includes(`'${tabName}'`)
             );
-            if (activeBtn) {
-                activeBtn.style.background = 'rgba(37, 99, 235, 0.2)';
-                activeBtn.style.color = '#60a5fa';
-                activeBtn.style.border = '1px solid rgba(37, 99, 235, 0.3)';
+            if (clickedBtn) {
+                clickedBtn.classList.add('active');
+                clickedBtn.style.background = 'rgba(37, 99, 235, 0.2)';
+                clickedBtn.style.color = '#60a5fa';
+                clickedBtn.style.border = '1px solid rgba(37, 99, 235, 0.3)';
             }
             
-            // Show tab
             document.querySelectorAll('.admin-tab').forEach(tab => tab.classList.add('hidden'));
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
             
@@ -1015,6 +1137,7 @@
             renderShipmentsList();
             renderChatList();
         }
+
         function renderShipmentsList() {
             const container = document.getElementById('shipmentsList');
             container.innerHTML = '';
@@ -1082,13 +1205,13 @@
             };
             
             store.shipments.unshift(newShipment);
+            persistData();
+            
             showToast(`Created: ${newShipment.code}`);
             
-            // Reset form
             document.getElementById('newCustomerName').value = '';
             document.getElementById('newCustomerEmail').value = '';
             
-            // Switch to shipments tab
             showAdminTab('shipments');
             refreshAdminData();
         }
@@ -1099,19 +1222,6 @@
             if (!shipment) return;
             
             document.getElementById('editTrackingCode').value = code;
-            
-            // Set current location in dropdown
-            const locationSelect = document.getElementById('editLocation');
-            const currentLocation = shipment.timeline[shipment.timeline.length - 1]?.location || '';
-            let locationFound = false;
-            for (let i = 0; i < locationSelect.options.length; i++) {
-                if (locationSelect.options[i].value === currentLocation) {
-                    locationSelect.selectedIndex = i;
-                    locationFound = true;
-                    break;
-                }
-            }
-            
             document.getElementById('editStatus').value = shipment.status;
             document.getElementById('editNotes').value = '';
             document.getElementById('editModal').classList.remove('hidden');
@@ -1141,17 +1251,11 @@
                 status: notes || `Status updated to ${newStatus}`
             });
             
+            persistData();
+            
             showToast('Shipment updated!');
             closeEditModal();
             renderShipmentsList();
-        }
-
-        function deleteShipment(code) {
-            if (confirm('Delete this shipment?')) {
-                store.shipments = store.shipments.filter(s => s.code !== code);
-                renderShipmentsList();
-                showToast('Deleted');
-            }
         }
 
         // Chat Functions
@@ -1159,7 +1263,17 @@
             document.getElementById('customerChatWidget').classList.remove('hidden');
             document.getElementById('chatToggleBtn').classList.add('hidden');
             
-            // Focus input after animation
+            // Add welcome message if empty
+            const container = document.getElementById('customerChatMessages');
+            if (container.children.length === 0) {
+                container.innerHTML = `
+                    <div class="chat-bubble received">
+                        <p style="font-size: 0.875rem;">Hello! Welcome to GlobalShip Pro. How can I help you today?</p>
+                        <span style="font-size: 0.75rem; color: #94a3b8; display: block; margin-top: 0.25rem;">Support • Just now</span>
+                    </div>
+                `;
+            }
+            
             setTimeout(() => {
                 document.getElementById('customerMessageInput').focus();
             }, 300);
@@ -1178,7 +1292,6 @@
             
             const container = document.getElementById('customerChatMessages');
             
-            // Add customer message
             const bubble = document.createElement('div');
             bubble.className = 'chat-bubble sent';
             bubble.innerHTML = `
@@ -1187,31 +1300,24 @@
             `;
             container.appendChild(bubble);
             
-            // Scroll to bottom
             container.scrollTop = container.scrollHeight;
-            
-            // Clear input
             input.value = '';
             
-            // Simulate admin reply after 2 seconds
             setTimeout(() => {
                 const reply = document.createElement('div');
                 reply.className = 'chat-bubble received';
                 reply.innerHTML = `
-                    <p style="font-size: 0.875rem;">Thank you for your message. Our team will respond shortly. For urgent inquiries, please call +1 (888) 555-SHIP.</p>
+                    <p style="font-size: 0.875rem;">Thank you for your message. Our team will respond shortly.</p>
                     <span style="font-size: 0.75rem; color: #94a3b8; display: block; margin-top: 0.25rem;">Support • Just now</span>
                 `;
                 container.appendChild(reply);
                 container.scrollTop = container.scrollHeight;
                 
-                // Add to admin chat list (simulate receiving)
                 simulateIncomingChat(text);
             }, 2000);
         }
 
         function simulateIncomingChat(customerText) {
-            // In real app, this would come from server
-            // For demo, we'll add to first chat if exists
             if (store.chats.length > 0) {
                 const chat = store.chats[0];
                 chat.messages.push({
@@ -1220,6 +1326,7 @@
                     time: new Date().toISOString()
                 });
                 chat.unread++;
+                persistData();
                 refreshAdminData();
             }
         }
@@ -1259,17 +1366,15 @@
             const chat = store.chats.find(c => c.id === chatId);
             if (!chat) return;
             
-            // Mark as read
             chat.unread = 0;
+            persistData();
             refreshAdminData();
             
-            // Show chat view
             document.getElementById('adminChatList').classList.add('hidden');
             document.getElementById('adminChatView').classList.remove('hidden');
             document.getElementById('chatCustomerName').textContent = chat.customer;
             document.getElementById('chatTrackingCode').textContent = chat.trackingCode;
             
-            // Render messages
             const container = document.getElementById('adminChatMessages');
             container.innerHTML = '';
             
@@ -1288,7 +1393,6 @@
             
             container.scrollTop = container.scrollHeight;
             
-            // Focus reply input
             setTimeout(() => {
                 document.getElementById('adminReplyInput').focus();
             }, 100);
@@ -1316,16 +1420,19 @@
                 time: new Date().toISOString()
             });
             
-            input.value = '';
-            openAdminChat(store.activeChat); // Refresh view
+            persistData();
             
-            // Simulate customer reply after 3 seconds
+            input.value = '';
+            openAdminChat(store.activeChat);
+            
             setTimeout(() => {
                 chat.messages.push({
                     sender: 'customer',
                     text: 'Thank you for the update!',
                     time: new Date().toISOString()
                 });
+                persistData();
+                
                 if (store.activeChat === chat.id) {
                     openAdminChat(chat.id);
                 } else {
@@ -1335,7 +1442,7 @@
             }, 3000);
         }
 
-        // Password Change
+        // Password Change - ENCODED STORAGE
         function changePassword(e) {
             e.preventDefault();
             
@@ -1343,7 +1450,8 @@
             const newPass = document.getElementById('newPassword').value;
             const confirm = document.getElementById('confirmPassword').value;
             
-            if (current !== store.credentials.password) {
+            // Verify current password
+            if (btoa(current) !== store.credentials.password) {
                 showToast('Current password wrong!', 'error');
                 return;
             }
@@ -1358,13 +1466,17 @@
                 return;
             }
             
-            store.credentials.password = newPass;
+            // Store encoded password
+            store.credentials.password = btoa(newPass);
+            store.credentials.lastChanged = new Date().toISOString();
+            
+            persistData();
             
             document.getElementById('currentPassword').value = '';
             document.getElementById('newPassword').value = '';
             document.getElementById('confirmPassword').value = '';
             
-            showToast('Password updated!');
+            showToast('Password saved!');
         }
 
         function handleContactSubmit(e) {
@@ -1375,15 +1487,13 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            // Set date
             document.getElementById('currentDate').textContent = new Date().toLocaleDateString();
             
-            // Enter key on tracking input
             document.getElementById('trackingInput')?.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') trackShipment();
             });
             
-            // Ensure inputs are focusable on mobile
+            // Fix iOS input issues
             document.querySelectorAll('input, textarea, select').forEach(el => {
                 el.addEventListener('touchstart', function(e) {
                     e.stopPropagation();
@@ -1391,7 +1501,7 @@
             });
         });
 
-        // Prevent double-tap zoom on buttons
+        // Prevent double-tap zoom
         let lastTouchEnd = 0;
         document.addEventListener('touchend', function(e) {
             const now = Date.now();
@@ -1403,4 +1513,3 @@
     </script>
 </body>
 </html>
-
